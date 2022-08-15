@@ -8,6 +8,7 @@ from telegram.ext.filters import Filters
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 from collections import OrderedDict
 import requests
+import sys
 
 import json
 import f
@@ -18,10 +19,15 @@ import f
 
 import requests
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 t_1 = "/team1"
 t_2 = "/team2"
 t_3 = "/ranking"
+
+PT1 = 0
+PT2 = 0
 
 def start(update: Update, context: CallbackContext):
     buttons = [[KeyboardButton(t_1)], [KeyboardButton(t_2)], [KeyboardButton(t_3)]]
@@ -35,10 +41,10 @@ def help(update: Update, context: CallbackContext):
     
     
 def team_1(update: Update, context: CallbackContext):
-    update.message.reply_text(T1)
+    update.message.reply_text(PT1 + T1)
 
 def team_2(update: Update, context: CallbackContext):
-    update.message.reply_text(T2)
+    update.message.reply_text(PT2 + T2)
 
 def ranking(update: Update, context: CallbackContext):
     # rk = " "+(str(abc))
@@ -169,7 +175,9 @@ for x in stage:
             pt2 = pt2 + stage[x].get("points")
             
 T1 = T1 + "\n\nPoints: " + str(pt1)
+print(str(pt1)+'\n', file=open('Points.txt', 'a'))
 T2 = T2 + "\n\nPoints: " + str(pt2)
+print(str(pt2)+'\n', file=open('Points.txt', 'a'))
             
 # print()
 # print()
