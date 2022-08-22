@@ -21,6 +21,8 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+# import Action chains 
+from selenium.webdriver.common.action_chains import ActionChains
 
 t_1 = "/team1"
 t_2 = "/team2"
@@ -67,6 +69,24 @@ T2 = "Team2:\n"
 
 # Making a GET request
 r = requests.get('https://www.lavuelta.es/en/rankings')
+
+# create webdriver object
+driver = webdriver.Firefox()
+  
+# get geeksforgeeks.org
+driver.get("https://www.lavuelta.es/en/rankings")
+  
+# get element 
+element = driver.find_element_by_link_text("GENERAL RANKING")
+  
+# create action chain object
+action = ActionChains(driver)
+  
+# click the item
+action.click(on_element = element)
+  
+# perform the operation
+action.perform()
 
 # Parsing the HTML
 soup = BeautifulSoup(r.content, 'html.parser')
