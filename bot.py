@@ -18,11 +18,12 @@ import f
 # updater = Updater("Token", use_context=True)
 
 import requests
+import csv
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-# import Action chains 
-from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver import Chrome
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 
 t_1 = "/team1"
 t_2 = "/team2"
@@ -67,58 +68,88 @@ abc = ""
 T1 = "Team1:\n"
 T2 = "Team2:\n"
 
-# Making a GET request
-r = requests.get('https://www.lavuelta.es/en/rankings')
+link='https://www.lavuelta.es/en/rankings'
+chrome_driver=ChromeDriverManager().install()
+driver=Chrome(service=Service(chrome_driver))
+driver.maximize_window()
+driver.get(link)
 
-# create webdriver object
-driver = webdriver.Firefox()
-  
-# get geeksforgeeks.org
-driver.get("https://www.lavuelta.es/en/rankings")
-  
+
 # get element 
-element = driver.find_element_by_link_text("GENERAL RANKING")
-  
-# create action chain object
-action = ActionChains(driver)
-  
-# click the item
-action.click(on_element = element)
-  
-# perform the operation
-action.perform()
+driver.find_element(By.XPATH,"//button[contains(text(),'General ranking')]").click()
 
-# Parsing the HTML
-soup = BeautifulSoup(r.content, 'html.parser')
+
+
+html = driver.page_source
+
+soup = BeautifulSoup(html, 'html.parser')
+
+
  
 s = soup.find('div', class_='sticky-scroll')
 
-lines = s.find_all('tr')
-for line in lines:
-    print(line.text.replace("\n", " ").replace("\n\n\n\n", "").replace("      ", ",").replace("   ", ",").replace("  ", ",").replace(",,,,,,,,,,,,,", ",").replace(",,,,,,,,,,,,,,,,", ",").replace(",,,,",",").replace(",,,",",").replace(",,",","))
- 
+table=s.find('table')
+
+rows = table.find_all('tr')
+#data is a list that contains all the lines of the table, each line is a list of field
+data=[]
+for row in rows:
+        titles=row.find_all('th')
+        titles = [title.text.strip().replace(' ','') for title in titles]
+        
+        data.append(titles)
+
+        cols = row.find_all('td')
+        cols = [col.text.strip().replace(' ','') for col in cols]
+       
+        data.append(cols)
+
+ #write on table excell
+with open('output.csv', 'w', newline='',encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerows(data)
+
+
+reader = csv.reader(open('output.csv', 'r'))
+lr=list(reader)
+writer = open('ranking.txt', 'w')
+
+
+for line in lr:
+    if(len(line)==0):
+        continue
+    for field in range(len(line)-1):
+        writer.write(line[field]+" ")
+    writer.write('\n')
+
+writer.close()
 n = 10
 m = 0
  
 # here you collect the arrival position and time of the stage
-
-i = 0
+i=0
 ran = ""
 stage = {}
 file = open('ranking.txt', 'r')
-for line in file:
-    pos    = line.rstrip().split(',')
+
+lines=file.readlines()
+for line in lines:
+    
+    pos = line.rstrip().split(' ')
+    
     if i == 0:
         pos = ""
         i = i + 1
         continue
-    rank   = int(pos[0])
+    rank   =int(pos[0])
     name   = pos[1]
     num    = pos[2]
     team   = pos[3]
     time   = pos[4]
     gap    = pos[5]
     bonus  = pos[6]
+
+    
 
     if rank == 1:
         points = 100
@@ -142,6 +173,7 @@ for line in file:
     stage[i] = cyclist
     i = i + 1
 file.close()
+
 
 for line in lines:
     line2 = line.text.replace("\n", " ").replace("\n\n\n\n", "").replace("      ", ",").replace("   ", ",").replace("  ", ",").replace(",,,,,,,,,,,,,", ",").replace(",,,,,,,,,,,,,,,,", ",").replace(",,,,",",").replace(",,,",",").replace(",,",",")
