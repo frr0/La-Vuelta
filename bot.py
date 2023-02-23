@@ -25,6 +25,8 @@ from selenium.webdriver import Chrome
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 
+from testScript import *
+
 t_1 = "/team1"
 t_2 = "/team2"
 t_3 = "/ranking"
@@ -64,123 +66,26 @@ def unknown_text(update: Update, context: CallbackContext):
         "Sorry I can't recognize you , you said '%s'" % update.message.text)
 
 
-abc = ""
-T1 = "Team1:\n"
-T2 = "Team2:\n"
+
 
 link='https://www.lavuelta.es/en/rankings'
-chrome_driver=ChromeDriverManager().install()
-driver=Chrome(service=Service(chrome_driver))
-driver.maximize_window()
-driver.get(link)
+readDataFromWeb(link)
 
 
-# get element 
-driver.find_element(By.XPATH,"//button[contains(text(),'General ranking')]").click()
+stage=writeDataInDictionary()
 
+#a cosa serve sta roba sotto?
 
-
-html = driver.page_source
-
-soup = BeautifulSoup(html, 'html.parser')
-
-
+#abc = ""
+#n = 10
+#m = 0
  
-s = soup.find('div', class_='sticky-scroll')
-
-table=s.find('table')
-
-rows = table.find_all('tr')
-#data is a list that contains all the lines of the table, each line is a list of field
-data=[]
-for row in rows:
-        titles=row.find_all('th')
-        titles = [title.text.strip().replace(' ','') for title in titles]
-        
-        data.append(titles)
-
-        cols = row.find_all('td')
-        cols = [col.text.strip().replace(' ','') for col in cols]
-       
-        data.append(cols)
-
- #write on table excell
-with open('output.csv', 'w', newline='',encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerows(data)
-
-
-reader = csv.reader(open('output.csv', 'r'))
-lr=list(reader)
-writer = open('ranking.txt', 'w')
-
-
-for line in lr:
-    if(len(line)==0):
-        continue
-    for field in range(len(line)-1):
-        writer.write(line[field]+" ")
-    writer.write('\n')
-
-writer.close()
-n = 10
-m = 0
- 
-# here you collect the arrival position and time of the stage
-i=0
-ran = ""
-stage = {}
-file = open('ranking.txt', 'r')
-
-lines=file.readlines()
-for line in lines:
-    
-    pos = line.rstrip().split(' ')
-    
-    if i == 0:
-        pos = ""
-        i = i + 1
-        continue
-    rank   =int(pos[0])
-    name   = pos[1]
-    num    = pos[2]
-    team   = pos[3]
-    time   = pos[4]
-    gap    = pos[5]
-    bonus  = pos[6]
-
-    
-
-    if rank == 1:
-        points = 100
-    elif rank == 2:
-        points = 50
-    elif rank == 3:
-        points = 20
-    else:
-        points = 0
-
-    cyclist = {
-        'rank': rank,
-        'name': name,
-        'num': num,
-        'team': team,
-        'time': time,
-        'gap': gap,
-        'bonus': bonus,
-        'points': points
-    }
-    stage[i] = cyclist
-    i = i + 1
-file.close()
-
-
-for line in lines:
-    line2 = line.text.replace("\n", " ").replace("\n\n\n\n", "").replace("      ", ",").replace("   ", ",").replace("  ", ",").replace(",,,,,,,,,,,,,", ",").replace(",,,,,,,,,,,,,,,,", ",").replace(",,,,",",").replace(",,,",",").replace(",,",",")
-    if m < n:
-        abc = abc + "\n" + line2
-        m = m + 1
-
+#for line in lines:
+#    line2 = line.text.replace("\n", " ").replace("\n\n\n\n", "").replace("      ", ",").replace("   ", ",").replace("  ", ",").replace(",,,,,,,,,,,,,", ",").replace(",,,,,,,,,,,,,,,,", ",").replace(",,,,",",").replace(",,,",",").replace(",,",",")
+#    if m < n:
+#        abc = abc + "\n" + line2
+#        m = m + 1
+#
 
 for nn in stage:
     if nn < 21:
@@ -193,30 +98,13 @@ print(ran)
 
 # here are the dictionary of the teams
 
-team1 = {}
-file = open('team1.txt', 'r')
-a = 0
-for line in file:
-    name    = line.rstrip()
-    team1[a] = name
-    T1 = T1 + "\n" + name
-    a = a + 1
-file.close()
-
-team2 = {}
-file = open('team2.txt', 'r')
-b = 0
-for line in file:
-    name    = line.rstrip()
-    team2[b] = name
-    T2 = T2 + "\n" + name
-    b = b + 1
-file.close()
+team1,team2,T1,T2=readTeamsData()       #T1,2 sono le stringhe  team1,2 sono i dizionari
 
 # here the points
 
 pt1 = 0
 pt2 = 0
+
 
 for x in stage:
     for t1 in team1:
@@ -226,10 +114,13 @@ for x in stage:
         if team2[t2] == stage[x].get("name"):
             pt2 = pt2 + stage[x].get("points")
             
+
 T1 = T1 + "\n\nPoints: " + str(pt1)
-print(str(pt1)+'\n', file=open('Points.txt', 'a'))
 T2 = T2 + "\n\nPoints: " + str(pt2)
-print(str(pt2)+'\n', file=open('Points.txt', 'a'))
+
+
+with open('Points.txt', 'a', newline='',encoding="utf-8") as f:
+    f.write(str(pt1)+'\n'+str(pt2)+'\n')
             
 # print()
 # print()
